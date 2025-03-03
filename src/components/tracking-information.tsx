@@ -2,14 +2,15 @@ import Coordinate from "../types/coordinate";
 
 type Props = {
   currentPos: Coordinate | null;
+  time: number;
 };
 
-const TrackingInformation = ({ currentPos }: Props) => {
+const TrackingInformation = ({ currentPos, time }: Props) => {
   return (
     <div className="bg-white p-4 rounded-lg">
       <h1 className="text-2xl font-bold">Tracking</h1>
       <div className="mt-2">
-        <div className="text-sm">Current Position:</div>
+        <div className="text-sm">Current Position: {time}</div>
         <div className="flex flex-row text-lg">
           {currentPos && (
             <>

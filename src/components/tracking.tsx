@@ -9,11 +9,13 @@ import fakeRealTimeTracking from "../test/fake-real-time-tracking";
 import PageLayout from "./page-layout";
 import TrackingInformation from "./tracking-information";
 import TrackingMap from "./tracking-map";
+import MessageBox from "./message-box";
 
 const markerRadius = 5;
 const trailMarkerRadius = 1;
 const tailLength = 30;
 const startTime = 0;
+const initMessagePopupTime = 3000;
 
 const mapMin: Coordinate = {
   lat: parseFloat(import.meta.env.VITE_MAP_MIN_LAT),
@@ -30,6 +32,9 @@ const Tracking = () => {
   const [currentPos, setCurrentPos] = useState<Coordinate | null>(null);
   const [trail, setTrail] = useState<Coordinate[]>([]);
   const [time, setTime] = useState(startTime);
+
+  const [displayMessage, setDisplayMessage] = useState("");
+  const [messageCoords, setMessageCoords] = useState<Coordinate | null>(null);
 
   const gpsToPixel = gpsToPixelCalc(
     mapMin,
@@ -49,6 +54,7 @@ const Tracking = () => {
     });
   };
 
+  // Keep track of time
   useEffect(() => {
     const intervalId = setInterval(() => {
       setTime((prevTime) => prevTime + 1);
@@ -56,6 +62,7 @@ const Tracking = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  // Ask and update current position for each time step
   useEffect(() => {
     const intervalId = setInterval(() => {},
     parseInt(import.meta.env.VITE_PUL_INTERVAL));
@@ -66,6 +73,14 @@ const Tracking = () => {
 
       if (!trackData) return prevPos;
 
+      if (trackData.msg) {
+        setDisplayMessage(trackData.msg);
+        setMessageCoords({ lat: trackData.lat, lng: trackData.lng });
+        setTimeout(() => {
+          setDisplayMessage("");
+        }, initMessagePopupTime);
+      }
+
       return { lat: trackData.lat, lng: trackData.lng } as Coordinate;
     });
 
@@ -74,7 +89,7 @@ const Tracking = () => {
 
   return (
     <PageLayout>
-      <TrackingInformation currentPos={currentPos} />
+      <TrackingInformation currentPos={currentPos} time={time} />
       <TrackingMap
         map={map}
         width={parseInt(import.meta.env.VITE_MAP_WIDTH)}
@@ -95,6 +110,13 @@ const Tracking = () => {
             x={gpsToPixel(currentPos.lat, currentPos.lng).x}
             y={gpsToPixel(currentPos.lat, currentPos.lng).y}
             fill="red"
+          />
+        )}
+        {displayMessage && messageCoords && (
+          <MessageBox
+            x={gpsToPixel(messageCoords.lat, messageCoords.lng).x}
+            y={gpsToPixel(messageCoords.lat, messageCoords.lng).y}
+            message={displayMessage}
           />
         )}
       </TrackingMap>
